@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    
+        <script>
+            L_NO_TOUCH = false;
+            L_DISABLE_3D = false;
+        </script>
+    
+    <style>html, body {width: 100%;height: 100%;margin: 0;padding: 0;}</style>
+    <style>#map {position:absolute;top:0;bottom:0;right:0;left:0;}</style>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_d03d45e534b124de41be703e094cb81f {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+        
+    <script src="https://cdn.jsdelivr.net/npm/iso8601-js-period@0.2.1/iso8601.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/pa7_hm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/pa7_leaflet_hm.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.control.css"/>
+    
+            <script>
+                var TDHeatmap = L.TimeDimension.Layer.extend({
+
+            initialize: function(data, options) {
+                var heatmapCfg = {
+                    radius: 15,
+                    blur: 0.8,
+                    maxOpacity: 1.,
+                    scaleRadius: false,
+                    useLocalExtrema: false,
+                    latField: 'lat',
+                    lngField: 'lng',
+                    valueField: 'count',
+                    defaultWeight : 1,
+                };
+                heatmapCfg = $.extend({}, heatmapCfg, options.heatmapOptions || {});
+                var layer = new HeatmapOverlay(heatmapCfg);
+                L.TimeDimension.Layer.prototype.initialize.call(this, layer, options);
+                this._currentLoadedTime = 0;
+                this._currentTimeData = {
+                    data: []
+                    };
+                this.data= data;
+                this.defaultWeight = heatmapCfg.defaultWeight || 1;
+            },
+            onAdd: function(map) {
+                L.TimeDimension.Layer.prototype.onAdd.call(this, map);
+                map.addLayer(this._baseLayer);
+                if (this._timeDimension) {
+                    this._getDataForTime(this._timeDimension.getCurrentTime());
+                }
+            },
+            _onNewTimeLoading: function(ev) {
+                this._getDataForTime(ev.time);
+                return;
+            },
+            isReady: function(time) {
+                return (this._currentLoadedTime == time);
+            },
+            _update: function() {
+                this._baseLayer.setData(this._currentTimeData);
+                return true;
+            },
+            _getDataForTime: function(time) {
+                    delete this._currentTimeData.data;
+                    this._currentTimeData.data = [];
+                    var data = this.data[time-1];
+                    for (var i = 0; i < data.length; i++) {
+                        this._currentTimeData.data.push({
+                                lat: data[i][0],
+                                lng: data[i][1],
+                                count: data[i].length>2 ? data[i][2] : this.defaultWeight
+                            });
+                        }
+                    this._currentLoadedTime = time;
+                    if (this._timeDimension && time == this._timeDimension.getCurrentTime() && !this._timeDimension.isLoading()) {
+                        this._update();
+                    }
+                    this.fire('timeload', {
+                        time: time
+                    });
+                }
+        });
+
+        L.Control.TimeDimensionCustom = L.Control.TimeDimension.extend({
+            initialize: function(index, options) {
+                var playerOptions = {
+                    buffer: 1,
+                    minBufferReady: -1
+                    };
+                options.playerOptions = $.extend({}, playerOptions, options.playerOptions || {});
+                L.Control.TimeDimension.prototype.initialize.call(this, options);
+                this.index = index;
+                },
+            _getDisplayDateFormat: function(date){
+                return this.index[date.getTime()-1];
+                }
+            });
+            </script>
+                
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+    
+            <script>
+                var TDHeatmap = L.TimeDimension.Layer.extend({
+
+            initialize: function(data, options) {
+                var heatmapCfg = {
+                    radius: 15,
+                    blur: 0.8,
+                    maxOpacity: 1.,
+                    scaleRadius: false,
+                    useLocalExtrema: false,
+                    latField: 'lat',
+                    lngField: 'lng',
+                    valueField: 'count',
+                    defaultWeight : 1,
+                };
+                heatmapCfg = $.extend({}, heatmapCfg, options.heatmapOptions || {});
+                var layer = new HeatmapOverlay(heatmapCfg);
+                L.TimeDimension.Layer.prototype.initialize.call(this, layer, options);
+                this._currentLoadedTime = 0;
+                this._currentTimeData = {
+                    data: []
+                    };
+                this.data= data;
+                this.defaultWeight = heatmapCfg.defaultWeight || 1;
+            },
+            onAdd: function(map) {
+                L.TimeDimension.Layer.prototype.onAdd.call(this, map);
+                map.addLayer(this._baseLayer);
+                if (this._timeDimension) {
+                    this._getDataForTime(this._timeDimension.getCurrentTime());
+                }
+            },
+            _onNewTimeLoading: function(ev) {
+                this._getDataForTime(ev.time);
+                return;
+            },
+            isReady: function(time) {
+                return (this._currentLoadedTime == time);
+            },
+            _update: function() {
+                this._baseLayer.setData(this._currentTimeData);
+                return true;
+            },
+            _getDataForTime: function(time) {
+                    delete this._currentTimeData.data;
+                    this._currentTimeData.data = [];
+                    var data = this.data[time-1];
+                    for (var i = 0; i < data.length; i++) {
+                        this._currentTimeData.data.push({
+                                lat: data[i][0],
+                                lng: data[i][1],
+                                count: data[i].length>2 ? data[i][2] : this.defaultWeight
+                            });
+                        }
+                    this._currentLoadedTime = time;
+                    if (this._timeDimension && time == this._timeDimension.getCurrentTime() && !this._timeDimension.isLoading()) {
+                        this._update();
+                    }
+                    this.fire('timeload', {
+                        time: time
+                    });
+                }
+        });
+
+        L.Control.TimeDimensionCustom = L.Control.TimeDimension.extend({
+            initialize: function(index, options) {
+                var playerOptions = {
+                    buffer: 1,
+                    minBufferReady: -1
+                    };
+                options.playerOptions = $.extend({}, playerOptions, options.playerOptions || {});
+                L.Control.TimeDimension.prototype.initialize.call(this, options);
+                this.index = index;
+                },
+            _getDisplayDateFormat: function(date){
+                return this.index[date.getTime()-1];
+                }
+            });
+            </script>
+                
+    
+            <script>
+                var TDHeatmap = L.TimeDimension.Layer.extend({
+
+            initialize: function(data, options) {
+                var heatmapCfg = {
+                    radius: 15,
+                    blur: 0.8,
+                    maxOpacity: 1.,
+                    scaleRadius: false,
+                    useLocalExtrema: false,
+                    latField: 'lat',
+                    lngField: 'lng',
+                    valueField: 'count',
+                    defaultWeight : 1,
+                };
+                heatmapCfg = $.extend({}, heatmapCfg, options.heatmapOptions || {});
+                var layer = new HeatmapOverlay(heatmapCfg);
+                L.TimeDimension.Layer.prototype.initialize.call(this, layer, options);
+                this._currentLoadedTime = 0;
+                this._currentTimeData = {
+                    data: []
+                    };
+                this.data= data;
+                this.defaultWeight = heatmapCfg.defaultWeight || 1;
+            },
+            onAdd: function(map) {
+                L.TimeDimension.Layer.prototype.onAdd.call(this, map);
+                map.addLayer(this._baseLayer);
+                if (this._timeDimension) {
+                    this._getDataForTime(this._timeDimension.getCurrentTime());
+                }
+            },
+            _onNewTimeLoading: function(ev) {
+                this._getDataForTime(ev.time);
+                return;
+            },
+            isReady: function(time) {
+                return (this._currentLoadedTime == time);
+            },
+            _update: function() {
+                this._baseLayer.setData(this._currentTimeData);
+                return true;
+            },
+            _getDataForTime: function(time) {
+                    delete this._currentTimeData.data;
+                    this._currentTimeData.data = [];
+                    var data = this.data[time-1];
+                    for (var i = 0; i < data.length; i++) {
+                        this._currentTimeData.data.push({
+                                lat: data[i][0],
+                                lng: data[i][1],
+                                count: data[i].length>2 ? data[i][2] : this.defaultWeight
+                            });
+                        }
+                    this._currentLoadedTime = time;
+                    if (this._timeDimension && time == this._timeDimension.getCurrentTime() && !this._timeDimension.isLoading()) {
+                        this._update();
+                    }
+                    this.fire('timeload', {
+                        time: time
+                    });
+                }
+        });
+
+        L.Control.TimeDimensionCustom = L.Control.TimeDimension.extend({
+            initialize: function(index, options) {
+                var playerOptions = {
+                    buffer: 1,
+                    minBufferReady: -1
+                    };
+                options.playerOptions = $.extend({}, playerOptions, options.playerOptions || {});
+                L.Control.TimeDimension.prototype.initialize.call(this, options);
+                this.index = index;
+                },
+            _getDisplayDateFormat: function(date){
+                return this.index[date.getTime()-1];
+                }
+            });
+            </script>
+                
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_d03d45e534b124de41be703e094cb81f" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_d03d45e534b124de41be703e094cb81f = L.map(
+                "map_d03d45e534b124de41be703e094cb81f",
+                {
+                    center: [-34.6037, -58.3816],
+                    crs: L.CRS.EPSG3857,
+                    zoom: 4,
+                    zoomControl: true,
+                    preferCanvas: false,
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_adc86079f956b31b316dce581c9e097f = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {"attribution": "Map tiles by Stamen Design, CC BY 3.0 \u2014 Map data \u00a9 OpenStreetMap", "detectRetina": false, "maxNativeZoom": 20, "maxZoom": 20, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abcd", "tms": false}
+            );
+        
+    
+            tile_layer_adc86079f956b31b316dce581c9e097f.addTo(map_d03d45e534b124de41be703e094cb81f);
+        
+    
+
+            var times = [1, 2, 3, 4, 5, 6, 7];
+
+            map_d03d45e534b124de41be703e094cb81f.timeDimension = L.timeDimension(
+                {times : times, currentTime: new Date(1)}
+            );
+
+            var heat_map_1c3ffb142c3e9a3d3d9418958cde6752Control = new L.Control.TimeDimensionCustom([2017, 2018, 2019, 2020, 2021, 2022, 2023], {
+                autoPlay: false,
+                backwardButton: true,
+                displayDate: true,
+                forwardButton: true,
+                limitMinimumRange: 5,
+                limitSliders: true,
+                loopButton: true,
+                maxSpeed: 10,
+                minSpeed: 0.1,
+                playButton: true,
+                playReverseButton: true,
+                position: "bottomleft",
+                speedSlider: true,
+                speedStep: 0.1,
+                styleNS: "leaflet-control-timecontrol",
+                timeSlider: true,
+                timeSliderDragUpdate: false,
+                timeSteps: 1
+                })
+                .addTo(map_d03d45e534b124de41be703e094cb81f);
+
+                var heat_map_1c3ffb142c3e9a3d3d9418958cde6752 = new TDHeatmap([[[-43.3007, -65.1023, 0.0], [-29.4111, -66.8507, 0.26451737], [-38.9516, -68.0591, 0.15676118], [-31.7333, -60.5333, 0.074211061], [-54.8019, -68.303, 0.0], [-27.7834, -64.2667, 0.0], [-31.5375, -68.5364, 0.0], [-24.7821, -65.4232, 0.36488813], [-51.6226, -69.2181, 0.0], [-28.4696, -65.7795, 0.0], [-34.61315, -58.37723, 0.0], [-27.3668, -55.896, 0.7384488], [-26.1849, -58.1758, 0.0], [-31.4135, -64.18105, 0.41148639], [-40.8114, -63.0, 0.13915057], [-32.8895, -68.8458, 0.0], [-27.4806, -58.8341, 0.0], [-26.8241, -65.2226, 1.0403968], [-34.6037, -58.3816, 0.065279946], [-27.4516, -58.9867, 0.0], [-24.7821, -65.4232, 5.0], [-26.8241, -65.2226, 17.0], [-36.6206, -64.29, 0.0], [-24.1858, -65.2995, 0.0], [-31.5375, -68.5364, 0.20440492], [-31.6239, -60.6967, 0.0]], [[-43.3007, -65.1023, 0.16711788], [-29.4111, -66.8507, 0.0], [-38.9516, -68.0591, 0.0], [-31.7333, -60.5333, 0.2205164], [-54.8019, -68.303, 0.0], [-27.7834, -64.2667, 0.0], [-31.5375, -68.5364, 0.0], [-24.7821, -65.4232, 0.14403701], [-51.6226, -69.2181, 0.0], [-28.4696, -65.7795, 0.0], [-34.61315, -58.37723, 0.0058151721], [-27.3668, -55.896, 0.16218272], [-26.1849, -58.1758, 0.0], [-31.4135, -64.18105, 0.027144872], [-40.8114, -63.0, 0.27457327], [-32.8895, -68.8458, 0.1026013], [-27.4806, -58.8341, 0.27245879], [-26.8241, -65.2226, 1.5111328], [-34.6037, -58.3816, 0.1955644], [-27.4516, -58.9867, 0.084711522], [-24.7821, -65.4232, 2.0], [-26.8241, -65.2226, 25.0], [-36.6206, -64.29, 1.0], [-24.1858, -65.2995, 0.13264517], [-31.5375, -68.5364, 0.0], [-31.6239, -60.6967, 0.0]], [[-43.3007, -65.1023, 0.0], [-29.4111, -66.8507, 0.25747582], [-38.9516, -68.0591, 0.15255506], [-31.7333, -60.5333, 0.50973225], [-54.8019, -68.303, 0.0], [-27.7834, -64.2667, 0.10327282], [-31.5375, -68.5364, 0.12938686], [-24.7821, -65.4232, 0.0], [-51.6226, -69.2181, 0.0], [-28.4696, -65.7795, 0.24282217], [-34.61315, -58.37723, 0.017271014], [-27.3668, -55.896, 0.0], [-26.1849, -58.1758, 0.0], [-31.4135, -64.18105, 0.0], [-40.8114, -63.0, 0.0], [-32.8895, -68.8458, 0.15228565], [-27.4806, -58.8341, 0.54002875], [-26.8241, -65.2226, 0.41800478], [-34.6037, -58.3816, 1.9856583], [-27.4516, -58.9867, 0.0], [-24.7821, -65.4232, 0.0], [-26.8241, -65.2226, 7.0], [-36.6206, -64.29, 0.0], [-24.1858, -65.2995, 0.0], [-31.5375, -68.5364, 0.0], [-31.6239, -60.6967, 0.085491687]], [[-43.3007, -65.1023, 0.16155246], [-29.4111, -66.8507, 0.0], [-38.9516, -68.0591, 0.0], [-31.7333, -60.5333, 0.2886084], [-54.8019, -68.303, 0.0], [-27.7834, -64.2667, 0.0], [-31.5375, -68.5364, 0.0], [-24.7821, -65.4232, 0.0], [-51.6226, -69.2181, 0.0], [-28.4696, -65.7795, 0.0], [-34.61315, -58.37723, 0.011401767], [-27.3668, -55.896, 0.0], [-26.1849, -58.1758, 0.0], [-31.4135, -64.18105, 0.0], [-40.8114, -63.0, 0.13375957], [-32.8895, -68.8458, 0.050242722], [-27.4806, -58.8341, 0.0], [-26.8241, -65.2226, 0.059009027], [-34.6037, -58.3816, 0.097540483], [-27.4516, -58.9867, 0.0], [-24.7821, -65.4232, 0.0], [-26.8241, -65.2226, 1.0], [-36.6206, -64.29, 0.0], [-24.1858, -65.2995, 0.0], [-31.5375, -68.5364, 0.0], [-31.6239, -60.6967, 0.141386]], [[-43.3007, -65.1023, 0.31787357], [-29.4111, -66.8507, 0.25084788], [-38.9516, -68.0591, 0.29741502], [-31.7333, -60.5333, 0.0], [-54.8019, -68.303, 0.0], [-27.7834, -64.2667, 0.7083264], [-31.5375, -68.5364, 0.0], [-24.7821, -65.4232, 0.55478966], [-51.6226, -69.2181, 0.0], [-28.4696, -65.7795, 0.0], [-34.61315, -58.37723, 0.011293311], [-27.3668, -55.896, 0.0], [-26.1849, -58.1758, 0.0], [-31.4135, -64.18105, 0.31593406], [-40.8114, -63.0, 0.0], [-32.8895, -68.8458, 0.049742259], [-27.4806, -58.8341, 0.26541156], [-26.8241, -65.2226, 0.058326486], [-34.6037, -58.3816, 0.32479808], [-27.4516, -58.9867, 0.0], [-24.7821, -65.4232, 8.0], [-26.8241, -65.2226, 1.0], [-36.6206, -64.29, 0.0], [-24.1858, -65.2995, 0.25666955], [-31.5375, -68.5364, 0.0], [-31.6239, -60.6967, 0.084189497]], [[-43.3007, -65.1023, 10.636734], [-29.4111, -66.8507, 0.49538425], [-38.9516, -68.0591, 0.88141191], [-31.7333, -60.5333, 1.2757742], [-54.8019, -68.303, 3.2970114], [-27.7834, -64.2667, 1.3024838], [-31.5375, -68.5364, 0.25072175], [-24.7821, -65.4232, 0.41113406], [-51.6226, -69.2181, 0.78160214], [-28.4696, -65.7795, 0.23669983], [-34.61315, -58.37723, 0.044753384], [-27.3668, -55.896, 0.5432775], [-26.1849, -58.1758, 1.4641145], [-31.4135, -64.18105, 0.96461231], [-40.8114, -63.0, 4.5668831], [-32.8895, -68.8458, 0.64037484], [-27.4806, -58.8341, 0.96524757], [-26.8241, -65.2226, 0.86499304], [-34.6037, -58.3816, 0.97353607], [-27.4516, -58.9867, 1.873367], [-24.7821, -65.4232, 6.0], [-26.8241, -65.2226, 15.0], [-36.6206, -64.29, 0.0], [-24.1858, -65.2995, 0.63497221], [-31.5375, -68.5364, 0.0], [-31.6239, -60.6967, 0.22284129]], [[-43.3007, -65.1023, 1.0780343], [-29.4111, -66.8507, 0.0], [-38.9516, -68.0591, 0.14516948], [-31.7333, -60.5333, 0.070267357], [-54.8019, -68.303, 0.0], [-27.7834, -64.2667, 0.099223085], [-31.5375, -68.5364, 0.0], [-24.7821, -65.4232, 0.20317784], [-51.6226, -69.2181, 0.0], [-28.4696, -65.7795, 0.0], [-34.61315, -58.37723, 0.011086776], [-27.3668, -55.896, 0.0], [-26.1849, -58.1758, 0.0], [-31.4135, -64.18105, 0.20656729], [-40.8114, -63.0, 0.0], [-32.8895, -68.8458, 0.34156156], [-27.4806, -58.8341, 0.087060161], [-26.8241, -65.2226, 0.3421683], [-34.6037, -58.3816, 0.09728352], [-27.4516, -58.9867, 0.0], [-24.7821, -65.4232, 3.0], [-26.8241, -65.2226, 6.0], [-36.6206, -64.29, 0.0], [-24.1858, -65.2995, 0.0], [-31.5375, -68.5364, 0.0], [-31.6239, -60.6967, 0.082959391]]],
+                {heatmapOptions: {
+                        radius: 20,
+                        blur: 0.8,
+                        minOpacity: 0.5,
+                        maxOpacity: 0.8,
+                        scaleRadius: false,
+                        useLocalExtrema: true,
+                        defaultWeight: 1,
+                        gradient: {0.05: 'pink', 0.15: 'hotpink', 0.25: 'deeppink', 0.75: 'fuchsia'}
+                    }
+                });
+
+        
+    
+            heat_map_1c3ffb142c3e9a3d3d9418958cde6752.addTo(map_d03d45e534b124de41be703e094cb81f);
+        
+    
+    var color_map_e8be90f9a9e910890b3910a1789753d9 = {};
+
+    
+    color_map_e8be90f9a9e910890b3910a1789753d9.color = d3.scale.threshold()
+              .domain([0.05, 0.05140280561122245, 0.05280561122244489, 0.05420841683366734, 0.05561122244488978, 0.05701402805611223, 0.058416833667334675, 0.059819639278557116, 0.06122244488977956, 0.06262525050100201, 0.06402805611222445, 0.06543086172344689, 0.06683366733466933, 0.06823647294589179, 0.06963927855711423, 0.07104208416833668, 0.07244488977955912, 0.07384769539078156, 0.075250501002004, 0.07665330661322645, 0.0780561122244489, 0.07945891783567134, 0.08086172344689378, 0.08226452905811624, 0.08366733466933868, 0.08507014028056112, 0.08647294589178356, 0.08787575150300601, 0.08927855711422845, 0.09068136272545091, 0.09208416833667335, 0.09348697394789579, 0.09488977955911823, 0.09629258517034067, 0.09769539078156313, 0.09909819639278558, 0.10050100200400802, 0.10190380761523046, 0.1033066132264529, 0.10470941883767534, 0.1061122244488978, 0.10751503006012024, 0.1089178356713427, 0.11032064128256514, 0.11172344689378758, 0.11312625250501002, 0.11452905811623246, 0.11593186372745491, 0.11733466933867735, 0.1187374749498998, 0.12014028056112225, 0.12154308617234469, 0.12294589178356713, 0.12434869739478957, 0.125751503006012, 0.12715430861723448, 0.1285571142284569, 0.12995991983967936, 0.1313627254509018, 0.13276553106212424, 0.1341683366733467, 0.13557114228456912, 0.1369739478957916, 0.138376753507014, 0.13977955911823647, 0.14118236472945891, 0.14258517034068136, 0.14398797595190382, 0.14539078156312624, 0.1467935871743487, 0.14819639278557115, 0.1495991983967936, 0.15100200400801603, 0.15240480961923847, 0.15380761523046094, 0.15521042084168335, 0.15661322645290582, 0.15801603206412826, 0.1594188376753507, 0.16082164328657314, 0.16222444889779558, 0.16362725450901805, 0.16503006012024046, 0.16643286573146293, 0.16783567134268537, 0.1692384769539078, 0.17064128256513025, 0.1720440881763527, 0.17344689378757513, 0.17484969939879758, 0.17625250501002004, 0.17765531062124246, 0.17905811623246493, 0.18046092184368734, 0.1818637274549098, 0.18326653306613228, 0.1846693386773547, 0.18607214428857716, 0.18747494989979957, 0.18887775551102204, 0.1902805611222445, 0.19168336673346692, 0.1930861723446894, 0.1944889779559118, 0.19589178356713427, 0.19729458917835674, 0.19869739478957915, 0.20010020040080156, 0.20150300601202403, 0.2029058116232465, 0.20430861723446891, 0.20571142284569138, 0.2071142284569138, 0.20851703406813626, 0.20991983967935873, 0.21132264529058115, 0.21272545090180361, 0.21412825651302603, 0.2155310621242485, 0.21693386773547096, 0.21833667334669338, 0.2197394789579158, 0.22114228456913826, 0.22254509018036073, 0.22394789579158314, 0.2253507014028056, 0.22675350701402802, 0.2281563126252505, 0.22955911823647296, 0.23096192384769537, 0.23236472945891784, 0.23376753507014025, 0.23517034068136272, 0.23657314629258513, 0.2379759519038076, 0.23937875751503007, 0.24078156312625248, 0.24218436873747495, 0.24358717434869737, 0.24498997995991983, 0.2463927855711423, 0.24779559118236472, 0.24919839679358718, 0.2506012024048096, 0.25200400801603207, 0.25340681362725453, 0.25480961923847695, 0.25621242484969936, 0.25761523046092183, 0.2590180360721443, 0.2604208416833667, 0.2618236472945892, 0.2632264529058116, 0.26462925851703406, 0.26603206412825653, 0.26743486973947894, 0.2688376753507014, 0.2702404809619238, 0.2716432865731463, 0.27304609218436876, 0.2744488977955912, 0.2758517034068136, 0.27725450901803605, 0.2786573146292585, 0.28006012024048094, 0.2814629258517034, 0.2828657314629258, 0.2842685370741483, 0.28567134268537075, 0.28707414829659317, 0.2884769539078156, 0.28987975951903805, 0.2912825651302605, 0.29268537074148293, 0.2940881763527054, 0.2954909819639278, 0.2968937875751503, 0.29829659318637275, 0.29969939879759516, 0.30110220440881763, 0.30250501002004004, 0.3039078156312625, 0.3053106212424849, 0.3067134268537074, 0.3081162324649298, 0.3095190380761523, 0.3109218436873747, 0.3123246492985972, 0.3137274549098196, 0.31513026052104204, 0.3165330661322645, 0.3179358717434869, 0.3193386773547094, 0.32074148296593186, 0.32214428857715427, 0.32354709418837674, 0.32494989979959915, 0.32635270541082156, 0.3277555110220441, 0.3291583166332665, 0.33056112224448897, 0.3319639278557114, 0.3333667334669338, 0.33476953907815626, 0.33617234468937873, 0.3375751503006012, 0.3389779559118236, 0.340380761523046, 0.3417835671342685, 0.34318637274549096, 0.34458917835671343, 0.34599198396793585, 0.34739478957915826, 0.3487975951903807, 0.35020040080160314, 0.35160320641282566, 0.3530060120240481, 0.3544088176352705, 0.35581162324649296, 0.35721442885771537, 0.35861723446893784, 0.3600200400801603, 0.3614228456913827, 0.3628256513026052, 0.3642284569138276, 0.36563126252505007, 0.3670340681362725, 0.36843687374749495, 0.3698396793587174, 0.37124248496993983, 0.3726452905811623, 0.3740480961923847, 0.3754509018036072, 0.37685370741482965, 0.37825651302605207, 0.37965931863727453, 0.38106212424849695, 0.38246492985971936, 0.3838677354709419, 0.3852705410821643, 0.38667334669338677, 0.3880761523046092, 0.3894789579158316, 0.39088176352705406, 0.39228456913827653, 0.393687374749499, 0.3950901803607214, 0.3964929859719438, 0.3978957915831663, 0.3992985971943887, 0.40070140280561123, 0.40210420841683364, 0.40350701402805605, 0.4049098196392785, 0.40631262525050094, 0.40771543086172346, 0.4091182364729459, 0.4105210420841683, 0.41192384769539075, 0.41332665330661317, 0.41472945891783564, 0.4161322645290581, 0.4175350701402805, 0.418937875751503, 0.4203406813627254, 0.42174348697394787, 0.4231462925851703, 0.42454909819639275, 0.4259519038076152, 0.42735470941883763, 0.4287575150300601, 0.4301603206412825, 0.431563126252505, 0.43296593186372745, 0.43436873747494986, 0.43577154308617233, 0.43717434869739474, 0.43857715430861716, 0.4399799599198397, 0.4413827655310621, 0.44278557114228456, 0.444188376753507, 0.4455911823647294, 0.44699398797595186, 0.4483967935871743, 0.4497995991983968, 0.4512024048096192, 0.4526052104208416, 0.4540080160320641, 0.4554108216432865, 0.456813627254509, 0.45821643286573144, 0.45961923847695385, 0.4610220440881763, 0.46242484969939873, 0.46382765531062126, 0.46523046092184367, 0.4666332665330661, 0.46803607214428855, 0.46943887775551096, 0.47084168336673343, 0.4722444889779559, 0.4736472945891783, 0.4750501002004008, 0.4764529058116232, 0.47785571142284566, 0.4792585170340681, 0.48066132264529055, 0.482064128256513, 0.4834669338677354, 0.4848697394789579, 0.4862725450901803, 0.4876753507014028, 0.48907815631262525, 0.49048096192384766, 0.4918837675350701, 0.49328657314629254, 0.49468937875751495, 0.4960921843687375, 0.4974949899799599, 0.49889779559118236, 0.5003006012024048, 0.5017034068136272, 0.5031062124248497, 0.5045090180360722, 0.5059118236472946, 0.507314629258517, 0.5087174348697394, 0.5101202404809619, 0.5115230460921844, 0.5129258517034068, 0.5143286573146293, 0.5157314629258517, 0.5171342685370741, 0.5185370741482965, 0.519939879759519, 0.5213426853707415, 0.5227454909819639, 0.5241482965931864, 0.5255511022044088, 0.5269539078156312, 0.5283567134268538, 0.5297595190380762, 0.5311623246492986, 0.532565130260521, 0.5339679358717434, 0.5353707414829659, 0.5367735470941883, 0.5381763527054109, 0.5395791583166333, 0.5409819639278557, 0.5423847695390781, 0.5437875751503005, 0.545190380761523, 0.5465931863727455, 0.5479959919839679, 0.5493987975951904, 0.5508016032064128, 0.5522044088176353, 0.5536072144288577, 0.5550100200400802, 0.5564128256513027, 0.5578156312625251, 0.5592184368737475, 0.5606212424849699, 0.5620240480961923, 0.5634268537074149, 0.5648296593186373, 0.5662324649298597, 0.5676352705410822, 0.5690380761523046, 0.570440881763527, 0.5718436873747494, 0.573246492985972, 0.5746492985971945, 0.5760521042084169, 0.5774549098196393, 0.5788577154308617, 0.5802605210420841, 0.5816633266533067, 0.5830661322645291, 0.5844689378757515, 0.5858717434869739, 0.5872745490981963, 0.5886773547094188, 0.5900801603206414, 0.5914829659318638, 0.5928857715430862, 0.5942885771543086, 0.595691382765531, 0.5970941883767535, 0.598496993987976, 0.5998997995991984, 0.6013026052104208, 0.6027054108216432, 0.6041082164328658, 0.6055110220440882, 0.6069138276553107, 0.6083166332665331, 0.6097194388777555, 0.611122244488978, 0.6125250501002004, 0.6139278557114228, 0.6153306613226452, 0.6167334669338677, 0.6181362725450902, 0.6195390781563126, 0.6209418837675351, 0.6223446893787575, 0.62374749498998, 0.6251503006012025, 0.6265531062124249, 0.6279559118236473, 0.6293587174348697, 0.6307615230460921, 0.6321643286573146, 0.6335671342685371, 0.6349699398797595, 0.636372745490982, 0.6377755511022044, 0.6391783567134269, 0.6405811623246493, 0.6419839679358718, 0.6433867735470942, 0.6447895791583166, 0.6461923847695391, 0.6475951903807615, 0.6489979959919839, 0.6504008016032063, 0.6518036072144288, 0.6532064128256514, 0.6546092184368738, 0.6560120240480962, 0.6574148296593186, 0.658817635270541, 0.6602204408817636, 0.661623246492986, 0.6630260521042084, 0.6644288577154308, 0.6658316633266532, 0.6672344689378757, 0.6686372745490983, 0.6700400801603207, 0.6714428857715431, 0.6728456913827655, 0.674248496993988, 0.6756513026052104, 0.6770541082164329, 0.6784569138276553, 0.6798597194388777, 0.6812625250501002, 0.6826653306613226, 0.684068136272545, 0.6854709418837676, 0.68687374749499, 0.6882765531062125, 0.6896793587174349, 0.6910821643286573, 0.6924849699398797, 0.6938877755511021, 0.6952905811623247, 0.6966933867735471, 0.6980961923847695, 0.6994989979959919, 0.7009018036072144, 0.702304609218437, 0.7037074148296594, 0.7051102204408818, 0.7065130260521042, 0.7079158316633266, 0.7093186372745491, 0.7107214428857715, 0.712124248496994, 0.7135270541082164, 0.7149298597194388, 0.7163326653306614, 0.7177354709418838, 0.7191382765531062, 0.7205410821643287, 0.7219438877755511, 0.7233466933867736, 0.724749498997996, 0.7261523046092184, 0.7275551102204408, 0.7289579158316633, 0.7303607214428858, 0.7317635270541082, 0.7331663326653307, 0.7345691382765531, 0.7359719438877755, 0.7373747494989981, 0.7387775551102205, 0.7401803607214429, 0.7415831663326653, 0.7429859719438877, 0.7443887775551102, 0.7457915831663327, 0.7471943887775551, 0.7485971943887775, 0.75])
+              .range(['#ffc0cbff', '#ffc0cbff', '#ffbfcbff', '#ffbfcbff', '#ffbecbff', '#ffbecbff', '#ffbdcaff', '#ffbdcaff', '#ffbccaff', '#ffbccaff', '#ffbbcaff', '#ffbacaff', '#ffbacaff', '#ffb9c9ff', '#ffb9c9ff', '#ffb8c9ff', '#ffb8c9ff', '#ffb7c9ff', '#ffb7c9ff', '#ffb6c9ff', '#ffb6c9ff', '#ffb5c8ff', '#ffb5c8ff', '#ffb4c8ff', '#ffb4c8ff', '#ffb3c8ff', '#ffb3c8ff', '#ffb2c8ff', '#ffb2c7ff', '#ffb1c7ff', '#ffb0c7ff', '#ffb0c7ff', '#ffafc7ff', '#ffafc7ff', '#ffaec7ff', '#ffaec6ff', '#ffadc6ff', '#ffadc6ff', '#ffacc6ff', '#ffacc6ff', '#ffabc6ff', '#ffabc6ff', '#ffaac5ff', '#ffaac5ff', '#ffa9c5ff', '#ffa9c5ff', '#ffa8c5ff', '#ffa8c5ff', '#ffa7c5ff', '#ffa7c4ff', '#ffa6c4ff', '#ffa5c4ff', '#ffa5c4ff', '#ffa4c4ff', '#ffa4c4ff', '#ffa3c4ff', '#ffa3c4ff', '#ffa2c3ff', '#ffa2c3ff', '#ffa1c3ff', '#ffa1c3ff', '#ffa0c3ff', '#ffa0c3ff', '#ff9fc3ff', '#ff9fc2ff', '#ff9ec2ff', '#ff9ec2ff', '#ff9dc2ff', '#ff9dc2ff', '#ff9cc2ff', '#ff9bc2ff', '#ff9bc1ff', '#ff9ac1ff', '#ff9ac1ff', '#ff99c1ff', '#ff99c1ff', '#ff98c1ff', '#ff98c1ff', '#ff97c0ff', '#ff97c0ff', '#ff96c0ff', '#ff96c0ff', '#ff95c0ff', '#ff95c0ff', '#ff94c0ff', '#ff94bfff', '#ff93bfff', '#ff93bfff', '#ff92bfff', '#ff92bfff', '#ff91bfff', '#ff90bfff', '#ff90bfff', '#ff8fbeff', '#ff8fbeff', '#ff8ebeff', '#ff8ebeff', '#ff8dbeff', '#ff8dbeff', '#ff8cbeff', '#ff8cbdff', '#ff8bbdff', '#ff8bbdff', '#ff8abdff', '#ff8abdff', '#ff89bdff', '#ff89bdff', '#ff88bcff', '#ff88bcff', '#ff87bcff', '#ff86bcff', '#ff86bcff', '#ff85bcff', '#ff85bcff', '#ff84bbff', '#ff84bbff', '#ff83bbff', '#ff83bbff', '#ff82bbff', '#ff82bbff', '#ff81bbff', '#ff81baff', '#ff80baff', '#ff80baff', '#ff7fbaff', '#ff7fbaff', '#ff7ebaff', '#ff7ebaff', '#ff7dbaff', '#ff7db9ff', '#ff7cb9ff', '#ff7bb9ff', '#ff7bb9ff', '#ff7ab9ff', '#ff7ab9ff', '#ff79b9ff', '#ff79b8ff', '#ff78b8ff', '#ff78b8ff', '#ff77b8ff', '#ff77b8ff', '#ff76b8ff', '#ff76b8ff', '#ff75b7ff', '#ff75b7ff', '#ff74b7ff', '#ff74b7ff', '#ff73b7ff', '#ff73b7ff', '#ff72b7ff', '#ff71b6ff', '#ff71b6ff', '#ff70b6ff', '#ff70b6ff', '#ff6fb6ff', '#ff6fb6ff', '#ff6eb6ff', '#ff6eb6ff', '#ff6db5ff', '#ff6db5ff', '#ff6cb5ff', '#ff6cb5ff', '#ff6bb5ff', '#ff6bb5ff', '#ff6ab5ff', '#ff6ab4ff', '#ff69b4ff', '#ff69b4ff', '#ff68b4ff', '#ff68b4ff', '#ff67b3ff', '#ff67b3ff', '#ff66b3ff', '#ff65b3ff', '#ff65b3ff', '#ff64b2ff', '#ff64b2ff', '#ff63b2ff', '#ff63b2ff', '#ff62b2ff', '#ff62b1ff', '#ff61b1ff', '#ff61b1ff', '#ff60b1ff', '#ff60b1ff', '#ff5fb0ff', '#ff5fb0ff', '#ff5eb0ff', '#ff5eb0ff', '#ff5db0ff', '#ff5dafff', '#ff5cafff', '#ff5cafff', '#ff5bafff', '#ff5bafff', '#ff5aaeff', '#ff5aaeff', '#ff59aeff', '#ff59aeff', '#ff58aeff', '#ff58aeff', '#ff57adff', '#ff57adff', '#ff56adff', '#ff56adff', '#ff55adff', '#ff55acff', '#ff54acff', '#ff54acff', '#ff53acff', '#ff53acff', '#ff52abff', '#ff51abff', '#ff51abff', '#ff50abff', '#ff50abff', '#ff4faaff', '#ff4faaff', '#ff4eaaff', '#ff4eaaff', '#ff4daaff', '#ff4da9ff', '#ff4ca9ff', '#ff4ca9ff', '#ff4ba9ff', '#ff4ba9ff', '#ff4aa8ff', '#ff4aa8ff', '#ff49a8ff', '#ff49a8ff', '#ff48a8ff', '#ff48a7ff', '#ff47a7ff', '#ff47a7ff', '#ff46a7ff', '#ff46a7ff', '#ff45a6ff', '#ff45a6ff', '#ff44a6ff', '#ff44a6ff', '#ff43a6ff', '#ff43a5ff', '#ff42a5ff', '#ff42a5ff', '#ff41a5ff', '#ff41a5ff', '#ff40a4ff', '#ff40a4ff', '#ff3fa4ff', '#ff3fa4ff', '#ff3ea4ff', '#ff3da3ff', '#ff3da3ff', '#ff3ca3ff', '#ff3ca3ff', '#ff3ba3ff', '#ff3ba2ff', '#ff3aa2ff', '#ff3aa2ff', '#ff39a2ff', '#ff39a2ff', '#ff38a1ff', '#ff38a1ff', '#ff37a1ff', '#ff37a1ff', '#ff36a1ff', '#ff36a0ff', '#ff35a0ff', '#ff35a0ff', '#ff34a0ff', '#ff34a0ff', '#ff339fff', '#ff339fff', '#ff329fff', '#ff329fff', '#ff319fff', '#ff319eff', '#ff309eff', '#ff309eff', '#ff2f9eff', '#ff2f9eff', '#ff2e9dff', '#ff2e9dff', '#ff2d9dff', '#ff2d9dff', '#ff2c9dff', '#ff2c9cff', '#ff2b9cff', '#ff2a9cff', '#ff2a9cff', '#ff299cff', '#ff299bff', '#ff289bff', '#ff289bff', '#ff279bff', '#ff279bff', '#ff269aff', '#ff269aff', '#ff259aff', '#ff259aff', '#ff249aff', '#ff2499ff', '#ff2399ff', '#ff2399ff', '#ff2299ff', '#ff2299ff', '#ff2198ff', '#ff2198ff', '#ff2098ff', '#ff2098ff', '#ff1f98ff', '#ff1f97ff', '#ff1e97ff', '#ff1e97ff', '#ff1d97ff', '#ff1d97ff', '#ff1c96ff', '#ff1c96ff', '#ff1b96ff', '#ff1b96ff', '#ff1a96ff', '#ff1a95ff', '#ff1995ff', '#ff1995ff', '#ff1895ff', '#ff1895ff', '#ff1794ff', '#ff1694ff', '#ff1694ff', '#ff1594ff', '#ff1594ff', '#ff1493ff', '#ff1493ff', '#ff1493ff', '#ff1394ff', '#ff1395ff', '#ff1395ff', '#ff1396ff', '#ff1397ff', '#ff1397ff', '#ff1398ff', '#ff1399ff', '#ff1299ff', '#ff129aff', '#ff129aff', '#ff129bff', '#ff129cff', '#ff129cff', '#ff129dff', '#ff129eff', '#ff119eff', '#ff119fff', '#ff11a0ff', '#ff11a0ff', '#ff11a1ff', '#ff11a2ff', '#ff11a2ff', '#ff11a3ff', '#ff11a4ff', '#ff10a4ff', '#ff10a5ff', '#ff10a6ff', '#ff10a6ff', '#ff10a7ff', '#ff10a8ff', '#ff10a8ff', '#ff10a9ff', '#ff0fa9ff', '#ff0faaff', '#ff0fabff', '#ff0fabff', '#ff0facff', '#ff0fadff', '#ff0fadff', '#ff0faeff', '#ff0eafff', '#ff0eafff', '#ff0eb0ff', '#ff0eb1ff', '#ff0eb1ff', '#ff0eb2ff', '#ff0eb3ff', '#ff0eb3ff', '#ff0eb4ff', '#ff0db5ff', '#ff0db5ff', '#ff0db6ff', '#ff0db6ff', '#ff0db7ff', '#ff0db8ff', '#ff0db8ff', '#ff0db9ff', '#ff0cbaff', '#ff0cbaff', '#ff0cbbff', '#ff0cbcff', '#ff0cbcff', '#ff0cbdff', '#ff0cbeff', '#ff0cbeff', '#ff0bbfff', '#ff0bc0ff', '#ff0bc0ff', '#ff0bc1ff', '#ff0bc2ff', '#ff0bc2ff', '#ff0bc3ff', '#ff0bc4ff', '#ff0ac4ff', '#ff0ac5ff', '#ff0ac5ff', '#ff0ac6ff', '#ff0ac7ff', '#ff0ac7ff', '#ff0ac8ff', '#ff0ac9ff', '#ff0ac9ff', '#ff09caff', '#ff09cbff', '#ff09cbff', '#ff09ccff', '#ff09cdff', '#ff09cdff', '#ff09ceff', '#ff09cfff', '#ff08cfff', '#ff08d0ff', '#ff08d1ff', '#ff08d1ff', '#ff08d2ff', '#ff08d3ff', '#ff08d3ff', '#ff08d4ff', '#ff07d4ff', '#ff07d5ff', '#ff07d6ff', '#ff07d6ff', '#ff07d7ff', '#ff07d8ff', '#ff07d8ff', '#ff07d9ff', '#ff07daff', '#ff06daff', '#ff06dbff', '#ff06dcff', '#ff06dcff', '#ff06ddff', '#ff06deff', '#ff06deff', '#ff06dfff', '#ff05e0ff', '#ff05e0ff', '#ff05e1ff', '#ff05e2ff', '#ff05e2ff', '#ff05e3ff', '#ff05e3ff', '#ff05e4ff', '#ff04e5ff', '#ff04e5ff', '#ff04e6ff', '#ff04e7ff', '#ff04e7ff', '#ff04e8ff', '#ff04e9ff', '#ff04e9ff', '#ff03eaff', '#ff03ebff', '#ff03ebff', '#ff03ecff', '#ff03edff', '#ff03edff', '#ff03eeff', '#ff03efff', '#ff03efff', '#ff02f0ff', '#ff02f1ff', '#ff02f1ff', '#ff02f2ff', '#ff02f2ff', '#ff02f3ff', '#ff02f4ff', '#ff02f4ff', '#ff01f5ff', '#ff01f6ff', '#ff01f6ff', '#ff01f7ff', '#ff01f8ff', '#ff01f8ff', '#ff01f9ff', '#ff01faff', '#ff00faff', '#ff00fbff', '#ff00fcff', '#ff00fcff', '#ff00fdff', '#ff00feff', '#ff00feff', '#ff00ffff', '#ff00ffff']);
+    
+
+    color_map_e8be90f9a9e910890b3910a1789753d9.x = d3.scale.linear()
+              .domain([0.05, 0.75])
+              .range([0, 450 - 50]);
+
+    color_map_e8be90f9a9e910890b3910a1789753d9.legend = L.control({position: 'topright'});
+    color_map_e8be90f9a9e910890b3910a1789753d9.legend.onAdd = function (map) {var div = L.DomUtil.create('div', 'legend'); return div};
+    color_map_e8be90f9a9e910890b3910a1789753d9.legend.addTo(map_d03d45e534b124de41be703e094cb81f);
+
+    color_map_e8be90f9a9e910890b3910a1789753d9.xAxis = d3.svg.axis()
+        .scale(color_map_e8be90f9a9e910890b3910a1789753d9.x)
+        .orient("top")
+        .tickSize(1)
+        .tickValues([0.05, 0.2833333333333333, 0.5166666666666666, 0.7499999999999999]);
+
+    color_map_e8be90f9a9e910890b3910a1789753d9.svg = d3.select(".legend.leaflet-control").append("svg")
+        .attr("id", 'legend')
+        .attr("width", 450)
+        .attr("height", 40);
+
+    color_map_e8be90f9a9e910890b3910a1789753d9.g = color_map_e8be90f9a9e910890b3910a1789753d9.svg.append("g")
+        .attr("class", "key")
+        .attr("fill", "black")
+        .attr("transform", "translate(25,16)");
+
+    color_map_e8be90f9a9e910890b3910a1789753d9.g.selectAll("rect")
+        .data(color_map_e8be90f9a9e910890b3910a1789753d9.color.range().map(function(d, i) {
+          return {
+            x0: i ? color_map_e8be90f9a9e910890b3910a1789753d9.x(color_map_e8be90f9a9e910890b3910a1789753d9.color.domain()[i - 1]) : color_map_e8be90f9a9e910890b3910a1789753d9.x.range()[0],
+            x1: i < color_map_e8be90f9a9e910890b3910a1789753d9.color.domain().length ? color_map_e8be90f9a9e910890b3910a1789753d9.x(color_map_e8be90f9a9e910890b3910a1789753d9.color.domain()[i]) : color_map_e8be90f9a9e910890b3910a1789753d9.x.range()[1],
+            z: d
+          };
+        }))
+      .enter().append("rect")
+        .attr("height", 40 - 30)
+        .attr("x", function(d) { return d.x0; })
+        .attr("width", function(d) { return d.x1 - d.x0; })
+        .style("fill", function(d) { return d.z; });
+
+    color_map_e8be90f9a9e910890b3910a1789753d9.g.call(color_map_e8be90f9a9e910890b3910a1789753d9.xAxis).append("text")
+        .attr("class", "caption")
+        .attr("y", 21)
+        .attr("fill", "black")
+        .text("Tasa de Hechos de Violaciones a la Ley de Residuos Peligrosos");
+    
+            tile_layer_adc86079f956b31b316dce581c9e097f.addTo(map_d03d45e534b124de41be703e094cb81f);
+        
+    
+            heat_map_1c3ffb142c3e9a3d3d9418958cde6752.addTo(map_d03d45e534b124de41be703e094cb81f);
+        
+    
+            tile_layer_adc86079f956b31b316dce581c9e097f.addTo(map_d03d45e534b124de41be703e094cb81f);
+        
+    
+            heat_map_1c3ffb142c3e9a3d3d9418958cde6752.addTo(map_d03d45e534b124de41be703e094cb81f);
+        
+</script>
+</html>
